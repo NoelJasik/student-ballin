@@ -1,5 +1,5 @@
 # Student ballin
-## Gra o studencie, który po wykładach z fizyki uznał że przyczyni się dla dobra nauki i zamknął się w bumper ballu i próbuję przejść przez ciężki proces edukacji
+Gra o studencie, który po wykładach z fizyki uznał że przyczyni się dla dobra nauki i zamknął się w bumper ballu i próbuję przejść przez ciężki proces edukacji
 
 ## Lista tasków (wstępna, jeszcze się ustali)
 
