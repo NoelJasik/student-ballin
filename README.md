@@ -19,3 +19,13 @@ Jak zostanie nam czasu:
 - obracanie planszą góra dół
 - Dźwięki i muzyczka
 - Ustawienia
+
+
+Propozycje silnika:
+https://www.cocos.com/en/cocos2d-x -
+SDL2 + Box2D + OpenAL -
+Wariant 2: SDL2 + Box2D + OpenGL
+cocos2d-x
+
+Pomysły:
+- Jak wypadniemy poza plansze to mamy sesje (dodatkowy poziom) jak nie zdamy wracamy na początek gry.
