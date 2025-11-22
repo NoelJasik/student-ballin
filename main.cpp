@@ -1,63 +1,152 @@
 #include <iostream>
 #include <SDL.h>
+#include <vector>
+#include "gameObject.h"
+
 
 using namespace std;
 
-int main(int argc, char* argv[]) {
+vector <gameObject> towers;
 
+// daje jako zmienne bo w obliczeniach się przyda
+static int _WIDTH = 1280;
+static int _HEIGHT = 720;
+
+
+
+void spawnTower(int _x, int _y, int _type) {
+    gameObject tower;
+
+    // trzeba porobić klasy do wież
+    switch (_type) {
+        default:
+            return;
+        case 1:
+            tower = gameObject(_x,_y,20,30,"Infantry Tower",100);
+            break;
+        case 2:
+            tower = gameObject(_x,_y,30,20,"Killdozer Tower",200);
+            tower.setMoveSpeed(0, 10);
+            break;
+        case 3:
+            tower = gameObject(_x,_y,40,40,"Cannon Tower",150);
+            break;
+    }
+    // wycentrowanie
+    tower.rect.x = _x - tower.rect.w / 2;
+    tower.rect.y = _y - tower.rect.h / 2;
+    // clamp żeby w ekranie się zmieściło
+    if (tower.rect.x < 0) tower.rect.x = 0;
+    if (tower.rect.y < 0) tower.rect.y = 0;
+    if (tower.rect.x + tower.rect.w > _WIDTH) tower.rect.x = _WIDTH - tower.rect.w;
+    if (tower.rect.y + tower.rect.h > _HEIGHT) tower.rect.y = _HEIGHT - tower.rect.h;
+
+    towers.push_back(tower);
+
+}
+
+int main(int argc, char *argv[]) {
     // Sprawdzanie errorów
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         cout << "SDL_Init error: " << SDL_GetError() << endl;
         return 1;
     }
 
-    SDL_Window* window = nullptr;
-    SDL_Renderer* renderer = nullptr;
+    SDL_Window *window = nullptr;
+    SDL_Renderer *renderer = nullptr;
     SDL_Event e;
     SDL_Init(SDL_INIT_EVERYTHING);
     bool running = true;
-    SDL_Rect player{10,10,250,250};
+    SDL_Rect player{10, 10, 10, 20};
+    // 0 - brak 1 - piechota 2 - killdozer 3 - działko
+    int current_tower = 0;
 
 
-    SDL_CreateWindowAndRenderer(1280,720, 0, &window, &renderer);
+
+    SDL_CreateWindowAndRenderer(_WIDTH, _HEIGHT, 0, &window, &renderer);
+    //placeholder na teksture w tle
+    auto background_texture =
+            SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 1280, 720);
+    //placeholder na teksture kursora
+    auto player_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 10, 20);
+    //placeholder na teksture wiezy
+    auto tower_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 10, 20);
 
 
-    while (running) {
-        while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT) {
-                running = false;
-            }
-            if (e.type == SDL_KEYDOWN) {
-                switch (e.key.keysym.sym) {
-                    case SDLK_RIGHT:
-                        player.x += 50;
-                        break;
-                    case SDLK_LEFT:
-                        player.x -= 50;
-                        break;
-                    case SDLK_UP:
-                        player.y -= 50;
-                        break;
-                    case SDLK_DOWN:
-                        player.y += 50;
-                        break;
-                }
-            }
-            else if (e.type == SDL_MOUSEMOTION) {
-                SDL_GetMouseState(&player.x,&player.y);
-            }
+    SDL_SetRenderTarget(renderer, background_texture);
+    SDL_SetRenderDrawColor(renderer, 51, 102, 0, 255);
+    SDL_RenderClear(renderer);
+
+    SDL_SetRenderTarget(renderer, player_texture);
+    SDL_SetRenderDrawColor(renderer, 204, 102, 0, 255);
+    SDL_RenderClear(renderer);
+
+    SDL_SetRenderTarget(renderer, tower_texture);
+    SDL_SetRenderDrawColor(renderer, 204, 102, 0, 255);
+    SDL_RenderClear(renderer);
+
+    SDL_SetRenderTarget(renderer, nullptr);
+
+
+ while (running) {
+     while (SDL_PollEvent(&e)) {
+
+         // -------------- input --------------
+
+         if (e.type == SDL_QUIT) {
+             running = false;
+         }
+            // wybór typu wieży
+         if (e.type == SDL_KEYDOWN) {
+             switch (e.key.keysym.sym) {
+                 case SDLK_1:
+                     current_tower = 1;
+                     break;
+                 case SDLK_2:
+                     current_tower = 2;
+                     break;
+                 case SDLK_3:
+                     current_tower = 3;
+                     break;
+             }
+             cout << current_tower << endl;
+         }
+
+
+         // stawianie wieży w pozycji kursora
+         if (e.type == SDL_MOUSEBUTTONDOWN) {
+             // można stawiać tylko w lewej połowie ekranu
+             if (e.button.button == SDL_BUTTON_LEFT && e.button.x <= _WIDTH / 2) {
+                 spawnTower(e.button.x , e.button.y, current_tower);
+             }
+         }
+         // wychodzenie z gry
+         if (e.type == SDL_KEYDOWN) {
+             if (e.key.keysym.sym == SDLK_ESCAPE) {
+                 running = false;
+             }
+         }
+     }
+
+     // -------------- render --------------
+
+        SDL_RenderCopy(renderer, background_texture, nullptr, nullptr);
+        SDL_RenderCopy(renderer, player_texture, nullptr, &player);
+
+
+        for (auto& t : towers) {
+            SDL_RenderCopy(renderer, tower_texture, nullptr, &t.rect);
+            // to trzeba zrobić matematycznie żeby działało niezależnie od fps
+            t.update();
         }
-        SDL_SetRenderDrawColor(renderer,  0,0,0,255);
-        SDL_RenderClear(renderer);
-
-        SDL_SetRenderDrawColor(renderer, 255,255,255,255);
-        SDL_RenderFillRect(renderer, &player);
 
         SDL_RenderPresent(renderer);
         SDL_Delay(10);
     }
 
-
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 
 
     return 0;

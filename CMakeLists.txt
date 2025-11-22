@@ -14,10 +14,12 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(SDL2)
 
-add_executable(uniProject main.cpp)
+add_executable(uniProject main.cpp
+        gameObject.cpp
+        gameObject.h)
 
-target_link_libraries(uniProject PRIVATE SDL2::SDL2 SDL2::SDL2main)
+target_link_libraries(uniProject PRIVATE SDL2::SDL2main SDL2::SDL2-static)
 
 target_include_directories(uniProject PRIVATE
-        ${SDL2_INCLUDE_DIRS}
+        ${sdl2_SOURCE_DIR}/include
 )
